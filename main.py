@@ -1,4 +1,5 @@
 import telebot
+from telebot import types
 import datetime
 from time import sleep
 import json
@@ -77,10 +78,10 @@ def send_schedule():
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    button = telebot.types.KeyboardButton('Расписание')
-    button_subscribe = telebot.types.KeyboardButton('Подписаться')
-    button_unsubscribe = telebot.types.KeyboardButton('Отписаться')
-    keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+    button = types.KeyboardButton('Расписание')
+    button_subscribe = types.KeyboardButton('Подписаться')
+    button_unsubscribe = types.KeyboardButton('Отписаться')
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.row(button)
     keyboard.row(button_subscribe, button_unsubscribe)
     bot.send_message(chat_id=message.chat.id, text=f'Привет, сливка! Нажми на кнопку, чтобы получить расписание!', reply_markup=keyboard)
