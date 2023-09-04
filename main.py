@@ -100,7 +100,8 @@ def get_user_language(chat_id: int) -> str:
     cursor = conn.cursor()
 
     cursor.execute("""SELECT language FROM subscriptions WHERE user_id == ?""", (chat_id, ))
-    language = cursor.fetchone()[0]
+    fetched = cursor.fetchone()
+    language = fetched[0] if fetched is not None else "rus"
 
     conn.commit()
     conn.close()
@@ -129,7 +130,7 @@ def update_buttons(language: str, is_admin: int) -> None:
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    logger.info(f'New user - {message.from_user.username}')
+    logger.info(f'New user - {message.from_user.username} ({message.from_user.first_name})')
 
     username = message.chat.username
     user_id = message.chat.id
@@ -176,7 +177,7 @@ def schedule(message):
     message_text = schedule_text(today, user_language)
 
     bot.send_message(chat_id=message.chat.id, text=message_text)
-    logger.info(f'Sent schedule to {message.from_user.username}(user_id - {message.from_user.id}) via command "{message.text}"')
+    logger.info(f'Sent schedule to {message.from_user.username} ({message.from_user.first_name})(user_id - {message.from_user.id}) via command "{message.text}"')
 
 @bot.message_handler(func=lambda message: message.text in ['Расписание на завтра', 'Розклад на завтра'], content_types=['text'])
 def schedule_tomorrow(message):
@@ -185,7 +186,7 @@ def schedule_tomorrow(message):
     message_text = schedule_text(tomorrow, user_language)
 
     bot.send_message(chat_id=message.chat.id, text=message_text)
-    logger.info(f'Sent schedule to {message.from_user.username}(user_id - {message.from_user.id}) via command "{message.text}"')
+    logger.info(f'Sent schedule to {message.from_user.username} ({message.from_user.first_name})(user_id - {message.from_user.id}) via command "{message.text}"')
 
 @bot.message_handler(func=lambda message: message.text in ['Подписаться', 'Підписатися'], content_types=['text'])
 def subscribe(message):
@@ -195,17 +196,22 @@ def subscribe(message):
     cursor = conn.cursor()
 
     cursor.execute("""SELECT subscribed FROM subscriptions WHERE user_id == ?""", (message.chat.id, ))
-    subscribed = cursor.fetchone()[0]
+    result = cursor.fetchone()
 
-    logger.info(f'User {message.from_user.username}(user_id - {message.from_user.id}) tried to subscribe')
+    if result is None:
+        subscribed = False
+    else:
+        subscribed = result[0]
+
+    logger.info(f'User {message.from_user.username} ({message.from_user.first_name})(user_id - {message.from_user.id}) tried to subscribe')
     if subscribed:
         bot.reply_to(message, 'Вы уже подписаны на рассылку!' if user_language == 'rus' else 'Ви вже підписані на розсилку!')
-        logger.info(f"User {message.from_user.username}(user_id - {message.from_user.id}) has been already subscribed")
+        logger.info(f"User {message.from_user.username} ({message.from_user.first_name})(user_id - {message.from_user.id}) has been already subscribed")
     else:
         cursor.execute("""UPDATE subscriptions SET subscribed = 1 WHERE user_id == ?""", (message.chat.id, ))
         conn.commit()
         bot.reply_to(message, 'Вы успешно подписались на рассылку!' if user_language == 'rus' else 'Ви успішно підписалися на розсилку!')
-        logger.info(f'User {message.from_user.username}(user_id - {message.from_user.id}) has successfully subscribed')
+        logger.info(f'User {message.from_user.username} ({message.from_user.first_name})(user_id - {message.from_user.id}) has successfully subscribed')
 
     conn.close()
 
@@ -217,17 +223,22 @@ def unsubscribe(message):
     cursor = conn.cursor()
 
     cursor.execute("""SELECT subscribed FROM subscriptions WHERE user_id == ?""", (message.chat.id, ))
-    subscribed = cursor.fetchone()[0]
+    result = cursor.fetchone()
 
-    logger.info(f'User {message.from_user.username}(user_id - {message.from_user.id}) tried to unsubscribe')
+    if result is None:
+        subscribed = False
+    else:
+        subscribed = result[0]
+
+    logger.info(f'User {message.from_user.username} ({message.from_user.first_name})(user_id - {message.from_user.id}) tried to unsubscribe')
     if not subscribed:
         bot.reply_to(message, 'Вы не подписаны на рассылку!' if user_language == 'rus' else 'Ви не підписані на розсилку!')
-        logger.info(f'User {message.from_user.username}(user_id - {message.from_user.id}) has been already unsubscribed')
+        logger.info(f'User {message.from_user.username} ({message.from_user.first_name})(user_id - {message.from_user.id}) has been already unsubscribed')
     else:
         cursor.execute("""UPDATE subscriptions SET subscribed = 0 WHERE user_id == ?""", (message.chat.id, ))
         conn.commit()
         bot.reply_to(message, 'Вы успешно отписались от рассылки!' if user_language == 'rus' else 'Ви успішно відписалися від розсилки!')
-        logger.info(f'User {message.from_user.username}(user_id - {message.from_user.id}) has successfully unsubscribed')
+        logger.info(f'User {message.from_user.username} ({message.from_user.first_name})(user_id - {message.from_user.id}) has successfully unsubscribed')
 
     conn.close()
 
@@ -242,10 +253,10 @@ def get_text_to_send_all(message):
     conn.commit()
     conn.close()
 
-    logger.info(f'User {message.from_user.username}(user_id - {message.from_user.id}) tried to send all')
+    logger.info(f'User {message.from_user.username} ({message.from_user.first_name})(user_id - {message.from_user.id}) tried to send all')
     if not user_is_admin:
         bot.reply_to(message, 'У вас нет прав на это' if user_language == 'rus' else 'У вас нема прав для цього')
-        logger.info(f'User {message.from_user.username}(user_id - {message.from_user.id}) has no rights to send all')
+        logger.info(f'User {message.from_user.username} ({message.from_user.first_name})(user_id - {message.from_user.id}) has no rights to send all')
         return
     
     msg = bot.reply_to(message, 'Что вы хотите отправить всем?' if user_language == 'rus' else 'Що ви хочете відправити усім?')
@@ -275,7 +286,7 @@ def send_all(message):
             continue
         try:
             bot.send_message(user_id[0], message.text)
-            logger.info(f'User {message.from_user.username}(user_id - {message.from_user.id}) sent "{message.text}" to {user_id[0]} via send all command')
+            logger.info(f'User {message.from_user.username} ({message.from_user.first_name})(user_id - {message.from_user.id}) sent "{message.text}" to {user_id[0]} via send all command')
             successful_sends += 1
         except telebot.apihelper.ApiException as e:
             logger.warning(f'Failed to send a message to user with user_id - {user_id}: {e}')
@@ -296,7 +307,7 @@ def change_language(message):
     keyboard.add(rus_lang, ukr_lang)
 
     bot.send_message(message.chat.id, 'На какой язык поменять?' if user_language == 'rus' else 'На яку мову змінити?', reply_markup=keyboard)
-    logger.info(f'User {message.from_user.username}(user_id - {message.from_user.id}) tried to change language')
+    logger.info(f'User {message.from_user.username} ({message.from_user.first_name})(user_id - {message.from_user.id}) tried to change language')
 
 @bot.callback_query_handler(func=lambda call: True)
 def answer_change_language(call):
@@ -315,8 +326,11 @@ def answer_change_language(call):
         conn.commit()
         
         cursor.execute("""SELECT is_admin FROM subscriptions WHERE user_id == ?""", (call.message.chat.id, ))
-        is_admin = cursor.fetchone()[0]
-        
+        result = cursor.fetchone()
+        if result:
+            is_admin = result[0]
+        else:
+            is_admin = 0 
         conn.commit()
         conn.close()
         
@@ -341,8 +355,11 @@ def answer_change_language(call):
         conn.commit()
         
         cursor.execute("""SELECT is_admin FROM subscriptions WHERE user_id == ?""", (call.message.chat.id, ))
-        is_admin = cursor.fetchone()[0]
-        
+        result = cursor.fetchone()
+        if result:
+            is_admin = result[0]
+        else:
+            is_admin = 0        
         conn.commit()
         conn.close()
 
