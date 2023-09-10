@@ -6,17 +6,16 @@
             "name": "Соціологія (Лекція)",
             "links": [
                 "https://meet.google.com/nte-kopn-dzm?authuser=0"
-                
             ],
             "teachers": "Северинюк Т.О."
         },
         {
             "week_parity": true,
+            "group": 1,
             "time": "8:00-9:35",
             "name": "Соціологія (Практика) для групи ВД02-01",
             "links": [
-                "https://meet.google.com/nte-kopn-dzm?authuser=0",
-                "Северинюк Т.О."
+                "https://meet.google.com/nte-kopn-dzm?authuser=0"
             ],
             "teachers": "Северинюк Т.О."
         },
@@ -41,6 +40,7 @@
     "tuesday": [
         {
             "week_parity": true,
+            "group": 2,
             "time": "8:00-9:35",
             "name": "Соціологія (Практика) для групи ВД02-02",
             "links": [
