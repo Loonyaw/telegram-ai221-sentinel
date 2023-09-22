@@ -64,7 +64,7 @@ def schedule_text(today: datetime.date, language: str, group: int) -> str:
         week_parity = True
     
     for item in schedule:
-        if item.get("week_parity") is None or item.get("week_parity") is week_parity and item.get("group") is None or item.get("group") is group:
+        if (item.get("week_parity") is None or item.get("week_parity") is week_parity) and (item.get("group") is None or item.get("group") is group):
             message_text += f'{item["time"]}\n{item["name"]}:\n'
             for link in item["links"]:
                 message_text += f'{link}\n'
@@ -79,12 +79,12 @@ def send_schedule() -> None:
 
     with sqlite3.connect('subscriptions.db') as conn:
         cursor = conn.cursor()
-        cursor.execute("""SELECT user_id, language FROM subscriptions WHERE subscribed == 1""")
+        cursor.execute("""SELECT user_id, language, user_group FROM subscriptions WHERE subscribed == 1""")
         subscribers = cursor.fetchall()
 
     for subscriber in subscribers:
         try:
-            message_text = schedule_text(today, subscriber[1])
+            message_text = schedule_text(today, subscriber[1], subscriber[2])
             bot.send_message(chat_id=subscriber[0], text=message_text)
             logger.info(f'Sent schedule to user_id - {subscriber[0]} via autosending')
         except telebot.apihelper.ApiException as e:
