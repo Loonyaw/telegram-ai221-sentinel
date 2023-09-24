@@ -12,8 +12,6 @@ import os
 import requests
 from telebot.apihelper import ApiTelegramException
 
-
-
 logger.add('logging.log', format='{time:YYYY-MM-DD HH:mm:ss} - {level} - {message}', level='DEBUG', rotation='10 MB', compression='zip')
 
 load_dotenv()
@@ -89,6 +87,7 @@ def send_schedule() -> None:
             logger.info(f'Sent schedule to user_id - {subscriber[0]} via autosending')
         except telebot.apihelper.ApiException as e:
             logger.warning(f'Failed to send a schedule to user with user_id - {subscriber[0]}: {e}')
+        sleep(1)
 
 def get_user_language(chat_id: int) -> str:
     '''Функция для получения языка пользователя'''
@@ -191,6 +190,7 @@ def start(message):
                         language TEXT NOT NULL CHECK (language IN ('rus', 'ukr')),
                         is_admin INTEGER NOT NULL CHECK (is_admin IN (0, 1)),
                         user_group INTEGER DEFAULT 1 CHECK (user_group IN (1, 2)))""")
+        
         cursor.execute("""SELECT * FROM subscriptions WHERE user_id == ?""", (user_id, ))
         existing_user = cursor.fetchone()
 
@@ -350,6 +350,7 @@ def send_all(message):
         except telebot.apihelper.ApiException as e:
             logger.warning(f'Failed to send a message to user with user_id - {user_id[0]}: {e}')
         total_users += 1
+        sleep(1)
     bot_reply_content = content_description if message.content_type != 'text' else f'Сообщение:\n{message.text}'
     bot.reply_to(message, f'Сообщение отправлено {successful_sends} из {total_users} пользователей:\n{bot_reply_content}' if user_language == 'rus'
                 else f'Повідомлення відправлене {successful_sends} з {total_users} користувачів:\n{bot_reply_content}')
@@ -485,7 +486,8 @@ def start_bot_polling():
                 print("Ошибка 502: Bad Gateway. Повторная попытка...")
             elif isinstance(e, requests.exceptions.ReadTimeout):
                 print("Ошибка таймаута. Повторная попытка...")
-            
+            elif isinstance(e, requests.exceptions.ConnectionError):
+                print("Ошибка соединения. Повторная попытка...")
             sleep(retry_delay)
             
             retry_delay = min(retry_delay * 2, MAX_RETRY_DELAY)
