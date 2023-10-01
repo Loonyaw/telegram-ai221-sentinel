@@ -480,6 +480,7 @@ def start_bot_polling():
     while True:
         try:
             bot.polling(none_stop=True)
+            break
         except (requests.exceptions.ReadTimeout, ApiTelegramException, requests.exceptions.ConnectionError) as e:
             connection_error = True
             if isinstance(e, ApiTelegramException) and e.error_code == 502:
