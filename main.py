@@ -470,12 +470,6 @@ def answer_change_group(call):
     bot.send_message(chat_id=call.message.chat.id, text=f'Сейчас выбрана группа {new_user_group}' if user_language == 'rus' else f'Зараз обрана група {new_user_group}')
 
     bot.edit_message_reply_markup(call.message.chat.id, message_id=call.message.message_id, reply_markup='')
-
-def notify_me(user_id, message):
-    try:
-        bot.send_message(user_id, message)
-    except Exception as e:
-        print(f"Ошибка при отправке сообщения: {e}")
     
 def start_bot_polling():
     RETRY_DELAY_BASE = 2  # Начальная задержка
@@ -483,16 +477,9 @@ def start_bot_polling():
     
     retry_delay = RETRY_DELAY_BASE  # Начальное значение задержки
     
-    connection_error = False
-
     while True:
         try:
             bot.polling(none_stop=True)
-
-            if connection_error:
-                notify_me(user_id, "Бот успешно подключился!")
-                connection_error = False
-            break
         except (requests.exceptions.ReadTimeout, ApiTelegramException, requests.exceptions.ConnectionError) as e:
             connection_error = True
             if isinstance(e, ApiTelegramException) and e.error_code == 502:
@@ -502,7 +489,6 @@ def start_bot_polling():
             elif isinstance(e, requests.exceptions.ConnectionError):
                 error_message = "Ошибка соединения. Повторная попытка..."
 
-            notify_me(user_id,error_message)
             print(error_message)
 
             sleep(retry_delay)
