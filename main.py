@@ -470,7 +470,7 @@ def answer_change_group(call):
     bot.send_message(chat_id=call.message.chat.id, text=f'Сейчас выбрана группа {new_user_group}' if user_language == 'rus' else f'Зараз обрана група {new_user_group}')
 
     bot.edit_message_reply_markup(call.message.chat.id, message_id=call.message.message_id, reply_markup='')
-    
+
 def start_bot_polling():
     RETRY_DELAY_BASE = 2  # Начальная задержка
     MAX_RETRY_DELAY = 600  # Максимальная задержка в секундах (10 минут)
@@ -496,7 +496,6 @@ def start_bot_polling():
             retry_delay = min(retry_delay * 2, MAX_RETRY_DELAY)
 
 if __name__ == '__main__':
-    user_id = 688575921
     sc.every().monday.at('07:00').do(send_schedule)
     sc.every().tuesday.at('07:00').do(send_schedule)
     sc.every().wednesday.at('07:00').do(send_schedule)
