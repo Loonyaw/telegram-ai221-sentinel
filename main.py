@@ -471,30 +471,17 @@ def answer_change_group(call):
 
     bot.edit_message_reply_markup(call.message.chat.id, message_id=call.message.message_id, reply_markup='')
 
-def notify_me(user_id, message):
-    try:
-        bot.send_message(user_id, message)
-    except Exception as e:
-        print(f"Ошибка при отправке сообщения: {e}")
-    
 def start_bot_polling():
     RETRY_DELAY_BASE = 2  # Начальная задержка
     MAX_RETRY_DELAY = 600  # Максимальная задержка в секундах (10 минут)
     
     retry_delay = RETRY_DELAY_BASE  # Начальное значение задержки
     
-    connection_error = False
-
     while True:
         try:
             bot.polling(none_stop=True)
-
-            if connection_error:
-                notify_me(user_id, "Бот успешно подключился!")
-                connection_error = False
             break
         except (requests.exceptions.ReadTimeout, ApiTelegramException, requests.exceptions.ConnectionError) as e:
-            connection_error = True
             if isinstance(e, ApiTelegramException) and e.error_code == 502:
                 error_message = "Ошибка 502: Bad Gateway. Повторная попытка..."
             elif isinstance(e, requests.exceptions.ReadTimeout):
@@ -502,7 +489,6 @@ def start_bot_polling():
             elif isinstance(e, requests.exceptions.ConnectionError):
                 error_message = "Ошибка соединения. Повторная попытка..."
 
-            notify_me(user_id,error_message)
             print(error_message)
 
             sleep(retry_delay)
@@ -510,7 +496,6 @@ def start_bot_polling():
             retry_delay = min(retry_delay * 2, MAX_RETRY_DELAY)
 
 if __name__ == '__main__':
-    user_id = 688575921
     sc.every().monday.at('07:00').do(send_schedule)
     sc.every().tuesday.at('07:00').do(send_schedule)
     sc.every().wednesday.at('07:00').do(send_schedule)
